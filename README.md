@@ -166,7 +166,7 @@ curl -sS -X PATCH http://127.0.0.1:8090/v1/plans/<plan_id>/assessments \
 | --- | --- | --- |
 | `GET` | `/healthz` | 进程健康检查 |
 | `PUT` | `/v1/nodes` | 登记解析节点 |
-| `GET` | `/v1/nodes` | 按状态和区域分页查询节点 |
+| `GET` | `/v1/nodes` | 按状态和区域分页查询节点，附带当前活动租约 |
 | `PUT` | `/v1/plans` | 创建计划草稿 |
 | `GET` | `/v1/plans` | 按状态分页查询计划 |
 | `GET` | `/v1/plans/{id}` | 查询计划 |
@@ -185,6 +185,7 @@ curl -sS -X PATCH http://127.0.0.1:8090/v1/plans/<plan_id>/assessments \
 - 区域版本只在计划草稿状态可追加，序列号严格递增且内容不可变。
 - A、AAAA、CNAME 条目在写入前规范化并稳定排序，重复条目直接拒绝。
 - 节点按 `ready -> leased -> ready` 变化，隔离节点不会被选中。
+- 节点列表在同一快照中附带当前活动租约的标识、计划和截止时间；无租约节点的 `active_lease` 为 null。
 - 一个节点同一时刻最多有一个 `claimed` 租约。
 - 相同请求键和相同内容可安全重放；同键异载荷返回 `idempotency_conflict`。
 - 一致性判定综合节点覆盖率、序列号、成功比例和最大延迟，返回 `consistent` 或 `review_required`。

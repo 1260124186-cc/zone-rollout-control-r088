@@ -167,7 +167,18 @@ type PlanPage struct {
 	Meta  PageMeta      `json:"meta"`
 }
 
+type ActiveLease struct {
+	LeaseID   string    `json:"lease_id"`
+	PlanID    string    `json:"plan_id"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+type NodeView struct {
+	ResolverNode
+	ActiveLease *ActiveLease `json:"active_lease"`
+}
+
 type NodePage struct {
-	Items []ResolverNode `json:"items"`
-	Meta  PageMeta       `json:"meta"`
+	Items []NodeView `json:"items"`
+	Meta  PageMeta   `json:"meta"`
 }

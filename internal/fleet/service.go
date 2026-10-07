@@ -105,11 +105,28 @@ func (s *Service) List(
 		})
 		page.Meta.Limit = limit
 		if len(items) > limit {
-			page.Items = append(page.Items, items[:limit]...)
+			items = items[:limit]
 			page.Meta.NextCursor = platform.EncodeCursor(items[limit-1].ID)
-			return nil
 		}
-		page.Items = append(page.Items, items...)
+		claimed := make(map[string]domain.NodeLease)
+		for _, lease := range state.Leases {
+			if lease.State == domain.LeaseClaimed {
+				claimed[lease.NodeID] = lease
+			}
+		}
+		for _, node := range items {
+			view := domain.NodeView{ResolverNode: node}
+			if node.State == domain.NodeLeased {
+				if lease, ok := claimed[node.ID]; ok {
+					view.ActiveLease = &domain.ActiveLease{
+						LeaseID:   lease.ID,
+						PlanID:    lease.PlanID,
+						ExpiresAt: lease.ExpiresAt,
+					}
+				}
+			}
+			page.Items = append(page.Items, view)
+		}
 		return nil
 	})
 	return page, err

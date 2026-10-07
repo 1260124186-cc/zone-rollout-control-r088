@@ -15,6 +15,12 @@ func enrollNode(harness *harness, name string, region string) (domain.ResolverNo
 	return node, err
 }
 
+func listNodes(harness *harness, query string) (domain.NodePage, error) {
+	var page domain.NodePage
+	err := harness.call(http.MethodGet, "/v1/nodes"+query, nil, &page)
+	return page, err
+}
+
 func createActivePlan(
 	harness *harness,
 	zone string,
