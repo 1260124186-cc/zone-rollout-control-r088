@@ -83,6 +83,23 @@ type ResolverNode struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// NodeLeaseSummary is the read-model projection of the lease currently
+// holding a node. It is attached to node reads so on-call staff can see
+// which plan occupies a node and when the occupation ends.
+type NodeLeaseSummary struct {
+	LeaseID   string    `json:"lease_id"`
+	PlanID    string    `json:"plan_id"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+// NodeView is the list-read projection of a ResolverNode. The stored node
+// fields stay flat and unchanged; ActiveLease is null when no claimed lease
+// holds the node in the same state snapshot.
+type NodeView struct {
+	ResolverNode
+	ActiveLease *NodeLeaseSummary `json:"active_lease"`
+}
+
 type NodeLease struct {
 	ID           string     `json:"id"`
 	PlanID       string     `json:"plan_id"`
@@ -168,6 +185,6 @@ type PlanPage struct {
 }
 
 type NodePage struct {
-	Items []ResolverNode `json:"items"`
-	Meta  PageMeta       `json:"meta"`
+	Items []NodeView `json:"items"`
+	Meta  PageMeta   `json:"meta"`
 }

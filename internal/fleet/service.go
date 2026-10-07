@@ -105,11 +105,30 @@ func (s *Service) List(
 		})
 		page.Meta.Limit = limit
 		if len(items) > limit {
-			page.Items = append(page.Items, items[:limit]...)
+			items = items[:limit]
 			page.Meta.NextCursor = platform.EncodeCursor(items[limit-1].ID)
-			return nil
 		}
-		page.Items = append(page.Items, items...)
+		// Resolve the active lease for each selected node inside the same
+		// read snapshot, so a node and its lease can never be observed
+		// mid-transition (leased without a lease, or ready with one).
+		claimed := make(map[string]domain.NodeLease)
+		for _, lease := range state.Leases {
+			if lease.State != domain.LeaseClaimed {
+				continue
+			}
+			claimed[lease.NodeID] = lease
+		}
+		for _, node := range items {
+			view := domain.NodeView{ResolverNode: node}
+			if lease, ok := claimed[node.ID]; ok {
+				view.ActiveLease = &domain.NodeLeaseSummary{
+					LeaseID:   lease.ID,
+					PlanID:    lease.PlanID,
+					ExpiresAt: lease.ExpiresAt,
+				}
+			}
+			page.Items = append(page.Items, view)
+		}
 		return nil
 	})
 	return page, err
